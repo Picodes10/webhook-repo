@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:5.0
+    container_name: webhook_mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password123
+    networks:
+      - webhook_network
+
+  webhook_app:
+    build: .
+    container_name: webhook_app
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    depends_on:
+      - mongodb
+    environment:
+      - MONGO_URI=mongodb://Nair:abcd1234@mongodb:27017/github_webhooks?authSource=admin
+      - WEBHOOK_SECRET=your-webhook-secret-here
+      - FLASK_ENV=production
+    networks:
+      - webhook_network
+    volumes:
+      - ./logs:/app/logs
+
+volumes:
+  mongodb_data:
+
+networks:
+  webhook_network:
+    driver: bridge
